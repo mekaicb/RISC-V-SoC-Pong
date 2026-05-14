@@ -14,8 +14,8 @@ module tb_instruction_memory();
 	initial begin
 		addr_in = 32'h00000000;
 		
-		repeat(8) @(posedge clk) //repeat for 10 clock cycles (will read max 10 hex strings for this test)
-			addr_in = addr_in + 1;
+		repeat(100) @(posedge clk)
+			addr_in = addr_in + 4;
 		$stop;
 	end
 	
