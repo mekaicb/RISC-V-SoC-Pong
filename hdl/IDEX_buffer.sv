@@ -1,0 +1,56 @@
+module IDEX_buffer(
+	input clk, rst_n,
+	input logic ALUsrc_i, ALUop_i, branch_i, memread_i, memwrite_i, regwrite_i, memtoreg_i, pc_to_alu_i, jal_i,
+	input logic funct7,
+	input logic [2:0] funct3,
+	input logic [31:0] pc_addr_i,
+	input logic [31:0] rs2_data_i, rs1_data_i, rd_addr_i,
+	input logic [31:0] imm_i,
+	output logic ALUsrc_o, ALUop_o, branch_o, memread_o, memwrite_o, regwrite_o, memtoreg_o, pc_to_alu_o, jal_o,
+	output logic [3:0] cat_funct,
+	output logic [31:0] pc_addr_o,
+	output logic [31:0] rs2_data_o, rs1_data_o, rd_addr_o,
+	output logic [31:0] imm_o
+	);
+	
+	always_ff @(posedge clk) begin
+		if(!rst_n) begin
+			ALUsrc_o <= 0;
+			ALUop_o <= 0;
+			branch_o <= 0;
+			memread_o <= 0;
+			memwrite_o <= 0;
+			regwrite_o <= 0;
+			memtoreg_o <= 0;
+			pc_to_alu_o <= 0;
+			jal_o <= 0;
+			cat_funct <= 0;
+			pc_addr_o <= 0;
+			rs2_data_o <= 0;
+			rs1_data_o <= 0;
+			rd_addr_o <= 0;
+			imm_o <= 0;
+		end
+		else begin
+			ALUsrc_o <= ALUsrc_i;
+			ALUop_o <= ALUop_i;
+			branch_o <= branch_i;
+			memread_o <= memread_i;
+			memwrite_o <= memwrite_i;
+			regwrite_o <= regwrite_i;
+			memtoreg_o <= memtoreg_i;
+			pc_to_alu_o <= pc_to_alu_i;
+			jal_o <= jal_i;
+			cat_funct <= {funct7, funct3};
+			pc_addr_o <= pc_addr_i;
+			rs2_data_o <= rs2_data_i;
+			rs1_data_o <= rs1_data_i;
+			rd_addr_o <= rd_addr_i;
+			imm_o <= imm_i;
+		end
+		
+	end
+	
+endmodule
+	
+	
