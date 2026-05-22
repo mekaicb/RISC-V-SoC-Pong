@@ -3,7 +3,7 @@ module control_unit(
 	output logic ALUsrc, pc_to_alu, 
 	output logic [1:0] ALUop, // EX stage control signals
 	output logic branch, memread, memwrite, // MEM stage control signals
-	output logic regwrite, memtoreg, jal // WB stage control signals
+	output logic regwrite, memtoreg // WB stage control signals
 	);
 	
 	always_comb begin
@@ -20,7 +20,6 @@ module control_unit(
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end
 			
 			// I-type (Arithmetic/Logic)
@@ -33,7 +32,6 @@ module control_unit(
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end
 			
 			// I-type (Loads)
@@ -46,9 +44,20 @@ module control_unit(
 				regwrite = 1'b1;
 				memtoreg = 1'b1; 
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end
 			
+			// I-type (JALR)
+			7'b1100111 : begin //JALR (Jump and Link Register)
+				ALUsrc = 1'b1; 
+				ALUop = 2'b00; 
+				branch = 1'b0;  
+				memread = 1'b0; 
+				memwrite = 1'b0;
+				regwrite = 1'b1; 
+				memtoreg = 1'b0;
+				pc_to_alu = 1'b0;
+			end
+		
 			// S-type 
 			7'b0100011 : begin
 				ALUsrc = 1'b1;  
@@ -59,20 +68,18 @@ module control_unit(
 				regwrite = 1'b0; // store is a 4 stage instruction, dont care
 				memtoreg = 1'b0; 
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end
 			
 			// B-type
 			7'b1100011 : begin
 				ALUsrc = 1'b0; 
-				ALUop = 2'b01; 
+				ALUop = 2'b10; // Check funct3 only
 				branch = 1'b1;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b0; 
 				memtoreg = 1'b0;
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end 
 		
 			// U-type	
@@ -85,11 +92,10 @@ module control_unit(
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end
 			
 			7'b0010111 : begin //AUIPC (Add Upper Immediate to PC) 
-				ALUsrc = 1'b1; // add imm (Note: will need additional mux to select between rs1_data & pc addr
+				ALUsrc = 1'b1; 
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0; 
@@ -97,7 +103,6 @@ module control_unit(
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
 				pc_to_alu = 1'b1;
-				jal = 1'b0;
 			end
 			
 			// J-type
@@ -108,33 +113,19 @@ module control_unit(
 				memread = 1'b0;
 				memwrite = 1'b0;
 				regwrite = 1'b1;
-				memtoreg = 1'b0;  
+				memtoreg = 2'b0; // Will have to add signal to set rs2 to +4
 				pc_to_alu = 1'b1;   // PC + imm = jump target
-				jal = 1'b1; // write PC+4 to rd instead
 			end
 			
-			7'b1100111 : begin //JALR (Jump and Link Register)
-				ALUsrc = 1'b1; 
-				ALUop = 2'b00; 
-				branch = 1'b0;  
-				memread = 1'b0; 
-				memwrite = 1'b0;
-				regwrite = 1'b1; 
-				memtoreg = 1'b0;
-				pc_to_alu = 1'b0;
-				jal = 1'b1;
-			end
-			
-			default : begin
+			default : begin 
 				ALUsrc = 1'b0; 
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b0; 
-				memtoreg = 1'b0;
+				memtoreg = 2'b0;
 				pc_to_alu = 1'b0;
-				jal = 1'b0;
 			end
 		endcase
 	end
@@ -153,6 +144,5 @@ endmodule
 	memwrite: Write (1) or no write (0)?
 	regwrite: Write to register file (1)?
 	memtoreg: Selects either the ALU result (0) or memory data (1) to send to the reg file
-	pc_to_alu: control signal for additional mux added in to account for auipc instr
-	jal: control signal for additional mux added to account for J-type commands. sits after memtoreg to select PC+4 or memtoreg output
+	pc_to_alu: control signal for additional mux added in to account for auipc instr. Chooses between rs1 or PC addr
 */

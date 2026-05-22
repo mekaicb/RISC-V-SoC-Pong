@@ -37,7 +37,6 @@ module reg_file(
 			
 		rs1_data = reg_out[rs1_addr]; //read output from register
 		rs2_data = reg_out[rs2_addr];
-		
 	end
 	
 endmodule

@@ -17,7 +17,7 @@ module ALU_control(
 					3'b100 : ALUcontrol = 4'b0011; // BLT (SLT -> ALU Result & Branch)
 					3'b101 : ALUcontrol = 4'b0011; // BGE (SLT -> !ALU Result & Branch)
 					3'b110 : ALUcontrol = 4'b0100; // BLTU (SLTU -> ALU Result & Branch)
-					3'b111 : ALUcontrol = 4'b0100; // BGEU (SLTU -> ALU Result & Branch)
+					3'b111 : ALUcontrol = 4'b0100; // BGEU (SLTU -> !ALU Result & Branch)
 					default : ALUcontrol = 4'b0001; // Default SUB
 				endcase
 			end
@@ -39,7 +39,7 @@ module ALU_control(
 			end
 			
 			2'b11 : begin
-				case({funct3})
+				case(funct3)
 					3'b000 : ALUcontrol = 4'b0000; // ADDI (ADD)
 					3'b010 : ALUcontrol = 4'b0011; // SLTI (SLT)
 					3'b011 : ALUcontrol = 4'b0100; // SLTIU (SLTU)
@@ -53,6 +53,7 @@ module ALU_control(
 					end
 					
 					default : ALUcontrol = 4'b0000; // Default ADD
+					
 				endcase
 			end
 			

@@ -6,11 +6,16 @@ module EXMEM_buffer(
 	input logic ALU_result_i,
 	input logic [31:0] rs2_data_i,
 	input logic [4:0] rd_addr_i,
-	output logic branch_o, memread_o, memwrite_o, regwrite_o, memtoreg_o, jal_o,
+	input logic [2:0] funct3,
+	input logic funct7,
+	output logic branch_o, memread_o, memwrite_o, regwrite_o, memtoreg_o,
 	output logic [31:0] imm_o,
+	output logic zero_o,
 	output logic [31:0] ALU_result_o,
 	output logic [31:0] rs2_data_o,
-	output logic [4:0] rd_addr_o
+	output logic [4:0] rd_addr_o,
+	output logic [2:0] EXMEM_funct3,
+	output logic EXMEM_funct7
 	);
 	
 	always_ff @(posedge clk) begin
@@ -24,6 +29,9 @@ module EXMEM_buffer(
 			ALU_result_o <= 32'b0;
 			rs2_data_o <= 32'b0;
 			rd_addr_o <= 32'b0;
+			EXMEM_funct3 <= 3'b0;
+			EXMEM_funct7 <= 1'b0;
+			zero_o <= 1'b0;
 		end
 		else begin
 			branch_o <= branch_i;
@@ -35,6 +43,9 @@ module EXMEM_buffer(
 			ALU_result_o <= ALU_result_i;
 			rs2_data_o <= rs2_data_i;
 			rd_addr_o <= rd_addr_i;
+			EXMEM_funct3 <= funct3;
+			EXMEM_funct7 <= funct7;
+			zero_o <= zero;
 		end
 	end
 endmodule
