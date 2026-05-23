@@ -1,7 +1,7 @@
 module control_unit(
-	input logic [6:0] opcode, 
-	output logic ALUsrc, pc_to_alu, 
-	output logic [1:0] ALUop, // EX stage control signals
+	input logic [6:0] opcode,
+	output logic [1:0] ALUop, ALUsrc, pc_to_alu, // EX stage control signals
+	output logic btarget, jump,
 	output logic branch, memread, memwrite, // MEM stage control signals
 	output logic regwrite, memtoreg // WB stage control signals
 	);
@@ -12,120 +12,140 @@ module control_unit(
 		
 			// R-type
 			7'b0110011 : begin 
-				ALUsrc = 1'b0; 
+				ALUsrc = 2'b00; 
 				ALUop = 2'b10; 
 				branch = 1'b0;
 				memread = 1'b0;
 				memwrite = 1'b0;
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b00;
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 			
 			// I-type (Arithmetic/Logic)
 			7'b0010011 : begin
-				ALUsrc = 1'b1;  
+				ALUsrc = 2'b01;  
 				ALUop = 2'b11; 
 				branch = 1'b0;  
 				memread = 1'b0;
 				memwrite = 1'b0;
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b00;
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 			
 			// I-type (Loads)
 			7'b0000011 : begin
-				ALUsrc = 1'b1;  
+				ALUsrc = 2'b01;  
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b1;
 				memwrite = 1'b0;
 				regwrite = 1'b1;
 				memtoreg = 1'b1; 
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b00;
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 			
 			// I-type (JALR)
 			7'b1100111 : begin //JALR (Jump and Link Register)
-				ALUsrc = 1'b1; 
+				ALUsrc = 2'b10; // in2 = 4
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b01; // in1 = PC address. ALU result = PC + 4
+				btarget = 1'b1;
+				jump = 1'b1;
 			end
 		
 			// S-type 
 			7'b0100011 : begin
-				ALUsrc = 1'b1;  
+				ALUsrc = 2'b01;   
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0;
 				memwrite = 1'b1;
-				regwrite = 1'b0; // store is a 4 stage instruction, dont care
+				regwrite = 1'b0;
 				memtoreg = 1'b0; 
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b00;
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 			
 			// B-type
 			7'b1100011 : begin
-				ALUsrc = 1'b0; 
-				ALUop = 2'b10; // Check funct3 only
+				ALUsrc = 2'b00; 
+				ALUop = 2'b11; // Check funct3 only 
 				branch = 1'b1;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b0; 
 				memtoreg = 1'b0;
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b00;
+				btarget = 1'b0;
+				jump = 1'b0;
 			end 
 		
 			// U-type	
 			7'b0110111 : begin //LUI (Load upper immediate)
-				ALUsrc = 1'b1; // Although doesn't need the ALU, route through so that can be selected by memtoreg
+				ALUsrc = 2'b01;
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b10; // in1 = 0. ALU result = 0 + shifted imm
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 			
 			7'b0010111 : begin //AUIPC (Add Upper Immediate to PC) 
-				ALUsrc = 1'b1; 
+				ALUsrc = 2'b01; 
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b1; 
 				memtoreg = 1'b0;
-				pc_to_alu = 1'b1;
+				pc_to_alu = 2'b01; // in1 = PC address, ALU result = PC + shifted imm
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 			
 			// J-type
 			7'b1101111 : begin //JAL (Jump and Link)
-				ALUsrc = 1'b1;
+				ALUsrc = 2'b10; // in2 = 4.
 				ALUop = 2'b00;
 				branch = 1'b0;
 				memread = 1'b0;
 				memwrite = 1'b0;
 				regwrite = 1'b1;
-				memtoreg = 2'b0; // Will have to add signal to set rs2 to +4
-				pc_to_alu = 1'b1;   // PC + imm = jump target
+				memtoreg = 1'b0; 
+				pc_to_alu = 2'b01; // in1 = PC address. ALU result = PC + 4
+				btarget = 1'b0;
+				jump = 1'b1;
 			end
 			
 			default : begin 
-				ALUsrc = 1'b0; 
+				ALUsrc = 2'b00;
 				ALUop = 2'b00; 
 				branch = 1'b0;  
 				memread = 1'b0; 
 				memwrite = 1'b0;
 				regwrite = 1'b0; 
 				memtoreg = 2'b0;
-				pc_to_alu = 1'b0;
+				pc_to_alu = 2'b00;
+				btarget = 1'b0;
+				jump = 1'b0;
 			end
 		endcase
 	end
@@ -133,7 +153,7 @@ endmodule
 
 
 /*
-	ALUsrc: Selects imm value (1) or reg (0) as ALU operand
+	ALUsrc: Selects imm value (01), rs2(00), or 4 (10), as in2 ALU operand
 	ALUop: Selects how ALU control should operate
 			- 00 = add (loads/stores to compute effective addr)
 			- 01 = sub (beq)
@@ -144,5 +164,7 @@ endmodule
 	memwrite: Write (1) or no write (0)?
 	regwrite: Write to register file (1)?
 	memtoreg: Selects either the ALU result (0) or memory data (1) to send to the reg file
-	pc_to_alu: control signal for additional mux added in to account for auipc instr. Chooses between rs1 or PC addr
+	pc_to_alu: Selects rs1 (00), imm value (01), or 0 (10), as in1 ALU operand
+	btarget: Selects PC (0) or rs1 (1) (For JALR) to add to offset as the branch target
+	jump: Special control signal to signal pcsrc = 1 on JAL/JALR
 */
