@@ -6,7 +6,7 @@ module IDEX_buffer(
 	input logic [2:0] funct3,
 	input logic [31:0] pc_addr_i,
 	input logic [31:0] rs2_data_i, rs1_data_i,
-	input logic [4:0] rd_addr_i,
+	input logic [4:0] rd_addr_i, rs2_addr_i, rs1_addr_i,
 	input logic [31:0] imm_i,
 	output logic branch_o, memread_o, memwrite_o, regwrite_o, memtoreg_o, jump_o, btarget_o,
 	output logic [1:0] ALUop_o, ALUsrc_o, pc_to_alu_o,
@@ -14,7 +14,7 @@ module IDEX_buffer(
 	output logic [2:0] funct3_o,
 	output logic [31:0] pc_addr_o,
 	output logic [31:0] rs2_data_o, rs1_data_o, 
-	output logic [4:0] rd_addr_o,
+	output logic [4:0] rd_addr_o, IDEX_rs2_addr, IDEX_rs1_addr,
 	output logic [31:0] imm_o
 	);
 	
@@ -37,6 +37,8 @@ module IDEX_buffer(
 			rs1_data_o <= 32'b0;
 			rd_addr_o <= 5'b0;
 			imm_o <= 32'b0;
+			IDEX_rs2_addr <= 5'b0;
+			IDEX_rs1_addr <= 5'b0;
 		end
 		else begin
 			ALUsrc_o <= ALUsrc_i;
@@ -56,8 +58,10 @@ module IDEX_buffer(
 			rs1_data_o <= rs1_data_i;
 			rd_addr_o <= rd_addr_i;
 			imm_o <= imm_i;
+			IDEX_rs2_addr <= rs2_addr_i;
+			IDEX_rs1_addr <= rs1_addr_i;
 		end
-		
+
 	end
 	
 endmodule
