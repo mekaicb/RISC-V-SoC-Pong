@@ -5,11 +5,9 @@ module instruction_memory(
 	);
 	
 	logic [31:0] mem_array[0:16383]; // 64kB/270kB dedicated to ROM. 64kB = 16384 words in one column
-	
-	initial $readmemh("../test/sumtest.hex", mem_array); //read data from hex_file.txt and write to mem_array
-		
-	always_ff @(posedge clk) begin
-		data_out <= mem_array[addr_in[15:2]]; // 5 address bits to select one word (log(16384) = 14)
+
+	always_comb begin
+		data_out = mem_array[addr_in[15:2]]; // 5 address bits to select one word (log(16384) = 14)
 	end
 	
 endmodule
