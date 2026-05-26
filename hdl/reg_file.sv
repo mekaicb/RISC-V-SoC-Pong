@@ -21,7 +21,7 @@ module reg_file(
 	genvar i;
 	generate
 		for(i=0; i<32; i=i+1) begin : reg_array
-			reg_32bits register(reg_in[i], clk, rst_n, en[i], reg_out[i]); //reg_in[i] = 32 bit input into register
+			reg_32bits register(reg_in[i], ~clk, rst_n, en[i], reg_out[i]); //reg_in[i] = 32 bit input into register
 		end
 	endgenerate
 	
