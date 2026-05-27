@@ -24,9 +24,9 @@
 	logic pcsrc;
 	logic pcwrite, IFID_write, IDEX_hazard_flush;
 	
-	logic [4:0] rs1_addr, IFID_rs1_addr, IDEX_rs1_addr;
-	logic [4:0] rs2_addr, IFID_rs2_addr, IDEX_rs2_addr;
-	logic [4:0] rd_addr, IFID_rd_addr, IDEX_rd_addr, EXMEM_rd_addr, MEMWB_rd_addr;
+	logic [4:0] rs1_addr, IDEX_rs1_addr;
+	logic [4:0] rs2_addr, IDEX_rs2_addr;
+	logic [4:0] rd_addr, IDEX_rd_addr, EXMEM_rd_addr, MEMWB_rd_addr;
 	
 	logic [31:0] rs1_data, IDEX_rs1_data;
 	logic [31:0] rs2_data, IDEX_rs2_data, EXMEM_rs2_data;
@@ -229,6 +229,7 @@
 		.imm_o(EXMEM_branch_target), 
 		.zero_o(EXMEM_zero),
 		.ALU_result_o(EXMEM_ALU_result),
+		.EXMEM_flush(pcsrc),
 		
 		.rs2_data_o(EXMEM_rs2_data), 
 		.rd_addr_o(EXMEM_rd_addr),
@@ -283,8 +284,6 @@
 		funct7 = IFID_data_out[30];
 		funct3 = IFID_data_out[14:12];
 		
-		branch_target = (IDEX_btarget ? forward_A_out : IDEX_addr_out) + IDEX_imm;
-		
 		case(forward_A)
 			2'b00 : forward_A_out = IDEX_rs1_data;
 			2'b01 : forward_A_out = rd_data;
@@ -313,6 +312,8 @@
 			default: in2 = 32'b0;
 		endcase
 
+		branch_target = (IDEX_btarget ? forward_A_out : IDEX_addr_out) + IDEX_imm;
+		
 		rd_data = MEMWB_memtoreg ? mem_data: MEMWB_ALU_result;
 		
 	end
