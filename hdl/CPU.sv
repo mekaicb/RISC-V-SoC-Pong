@@ -17,6 +17,7 @@
 	logic memread, IDEX_memread, EXMEM_memread;
 	logic jump, IDEX_jump, EXMEM_jump;
 	logic btarget, IDEX_btarget;
+	logic ebreak, ebreak_halt;
 	logic [1:0] aluop, IDEX_aluop;
 	logic [3:0] ALU_cont;
 	logic [1:0] alusrc, IDEX_alusrc;
@@ -53,6 +54,7 @@
 		.clk(clk),
 		.rst_n(rst_n),
 		
+		.ebreak(ebreak_halt),
 		.addr_in(pc_addr_in), 
 		.addr_out(pc_addr_out),
 		.pcwrite(pcwrite)
@@ -74,6 +76,7 @@
 		.pc_addr_o(IFID_addr_out),
 		.inst_data_o(IFID_data_out),
 		
+		.ebreak_flush(ebreak),
 		.IFID_flush(pcsrc),
 		.IFID_write(IFID_write)
 	);
@@ -107,7 +110,8 @@
 		.regwrite(regwrite),
 		.memtoreg(memtoreg),
 		.jump(jump),
-		.btarget(btarget)
+		.btarget(btarget),
+		.ebreak(ebreak)
 	);
 	
 	IDEX_buffer IDEX_buffer(
@@ -316,6 +320,13 @@
 		
 		rd_data = MEMWB_memtoreg ? mem_data: MEMWB_ALU_result;
 		
+	end
+	
+	always_ff @(posedge clk) begin
+		if(!rst_n)     
+			ebreak_halt <= 0;
+		else if(ebreak) 
+			ebreak_halt <= 1; // sets and never clears until reset
 	end
 	
 endmodule
