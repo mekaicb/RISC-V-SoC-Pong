@@ -4,15 +4,19 @@ module instruction_memory(
 	output logic [31:0] data_out
 	);
 	
-	logic [31:0] mem_array[0:16383]; // 64kB/270kB dedicated to ROM. 64kB = 16384 words in one column
-
-	always_comb begin
-		data_out = mem_array[addr_in[15:2]]; // 5 address bits to select one word (log(16384) = 14)
+	(* ramstyle = "M9K" *) logic [31:0] mem_array[0:1279]; // word addressible 5kB memory (1280 words)
+	
+	initial begin
+		$readmemh("../test/sumtest_ROM.hex", mem_array);
+	end
+	
+	always_ff @(posedge clk) begin // synchronous read 
+		data_out <= mem_array[addr_in[12:2]]; // 11 address bits to select one word (log2(1280) = 10.32)
 	end
 	
 endmodule
 
 
 /*
-[15:2] forces word addressibility. Only addresses that're multiples of 4 are addressible in ROM. 
+[12:2] forces word addressibility. Only addresses that're multiples of 4 are addressible in ROM. 
 */
