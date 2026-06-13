@@ -6,64 +6,94 @@ module RAM(
 	output logic [31:0] data_o
 	);
 	
-	logic [31:0] eff_addr, data;
-	logic [7:0] mem_array[0:131071]; // byte sized memory array of 131072 bytes 
-	localparam offset = 32'h10000; // Starts after ROM. ROM = 0-64kB, 64kB = 0z00010000 (Type param for internal constants)
+	logic [2:0] byte_en; // Selects which byte of the word to load from memory, or store to memory
+	logic [1:0] byte_sel;
+	
+	logic [31:0] eff_addr;
+	(* ramstyle = "M9K" *) logic [31:0] mem_array[0:15359]; // Word addressible 15kB RAM. (15kB = 3840 words = 15360 bytes)
+	
+	localparam offset = 32'h0000A000; // Start at 15kB
+	
+	assign eff_addr = addr_in - offset;
+	assign byte_sel = eff_addr[1:0]; // Assign byte enable to the lower two bits of the address input
 	
 	always_comb begin
-		eff_addr = addr_in - offset;
-		data = 32'b0;
-		
-		if(memread) begin
-			case(funct3)
-				3'b000 : begin // LB
-					data = mem_array[eff_addr[16:0]]; // 17 addr bits to address any of the 131071 bytes
-					data_o = {{24{data[7]}}, data[7:0]}; // Sign extended
+		case(funct3)
+			3'b000 : byte_en = 3'b000; // LB/SB, select byte 0
+			3'b001 : byte_en = 3'b001; // LH/SH, select byte 0+1
+			3'b010 : byte_en = 3'b010; // LW/SW, select full word
+			3'b100 : byte_en = 3'b011; // LBU, select byte 0 & sign extend
+			3'b101 : byte_en = 3'b100; // LHU, select byte 0 & sign extend
+			default : byte_en = 2'b10;
+		endcase
+	end
+	
+	always_ff @(posedge clk) begin // Synchronous read
+		if(memread) begin 
+			case(byte_en) 
+				3'b000 : begin // Will be selecting one byte
+					case(byte_sel) // Which one byte to select specfically from the word in memory?
+						2'b00 : data_o <= {24'b0, mem_array[eff_addr[15:2]][7:0]}; // Select the first byte of the word from the memory array, zero extend
+						2'b01 : data_o <= {24'b0, mem_array[eff_addr[15:2]][15:8]}; 
+						2'b10 : data_o <= {24'b0, mem_array[eff_addr[15:2]][23:16]};
+						2'b11 : data_o <= {24'b0, mem_array[eff_addr[15:2]][31:24]};
+					endcase
 				end
-				3'b001 : begin // LH
-					data = {mem_array[eff_addr[16:0]+1], mem_array[eff_addr[16:0]]}; // Little endian: Lower address = Lower byte, even though it reads before in memory
-					data_o = {{16{data[15]}}, data[15:0]};
+				3'b001 : begin // Select two bytes
+					case(byte_sel) // Which two bytes to select specifically
+						2'b00 : data_o <= {16'b0, mem_array[eff_addr[15:2]][15:0]};
+						2'b10 : data_o <= {16'b0, mem_array[eff_addr[15:2]][31:16]};
+					endcase
 				end
-				3'b010 : begin // LW
-					data_o = {mem_array[eff_addr[16:0]+3], mem_array[eff_addr[16:0]+2], mem_array[eff_addr[16:0]+1], mem_array[eff_addr[16:0]]};
+				3'b010 : begin
+					data_o <= mem_array[eff_addr[15:2]];
 				end
-				3'b100 : begin // LBU
-					data = mem_array[eff_addr[16:0]]; 
-					data_o = {{24{1'b0}}, data[7:0]};
+				3'b011 : begin
+					case(byte_sel)
+						2'b00 : data_o <= {{24{mem_array[eff_addr[15:2]][7]}}, mem_array[eff_addr[15:2]][7:0]}; // Sign extend the byte to 32 bits
+						2'b01 : data_o <= {{24{mem_array[eff_addr[15:2]][15]}}, mem_array[eff_addr[15:2]][15:8]}; // Select the 2nd byte, place as lowest byte and sign extend to 32 bits
+						2'b10 : data_o <= {{24{mem_array[eff_addr[15:2]][23]}}, mem_array[eff_addr[15:2]][23:16]};
+						2'b11 : data_o <= {{24{mem_array[eff_addr[15:2]][31]}}, mem_array[eff_addr[15:2]][31:24]};
+					endcase
 				end
-				3'b101 : begin // LHU
-					data = {mem_array[eff_addr[16:0]+1], mem_array[eff_addr[16:0]]}; // Little endian: Lower address = Lower byte, even though it reads before in memory
-					data_o = {{16{1'b0}}, data[15:0]};
+				3'b100 : begin
+					case(byte_sel)
+						2'b00 : data_o <= {{16{mem_array[eff_addr[15:2]][15]}}, mem_array[eff_addr[15:2]][15:0]}; // Sign extend the byte to 32 bits
+						2'b01 : data_o <= {{16{mem_array[eff_addr[15:2]][31]}}, mem_array[eff_addr[15:2]][31:16]}; // Select the 2nd byte, place as lowest byte and sign extend to 32 bits
+					endcase
 				end
-				default : begin
-					data_o = 32'b0;
-				end	
+				default : data_o <= mem_array[eff_addr[15:2]]; // default read the full word
 			endcase
 		end
-		else begin
-			data_o = 32'b0;
-		end
-	end
-		
-	always_ff @(posedge clk) begin // Writes must be in always_ff not always_comb
-		if (memwrite) begin
-			case(funct3)
-				3'b000 : begin // SB
-					mem_array[eff_addr[16:0]] <= data_i[7:0];
+		if(memwrite) begin
+			case(byte_en)
+				2'b00 : begin
+					case(byte_sel)
+						2'b00 : mem_array[eff_addr[15:2]][7:0] <= data_i[7:0];
+						2'b01 : mem_array[eff_addr[15:2]][15:8] <= data_i[7:0];
+						2'b10 : mem_array[eff_addr[15:2]][23:16] <= data_i[7:0];
+						2'b11 : mem_array[eff_addr[15:2]][31:24] <= data_i[7:0];
+					endcase
 				end
-				3'b001 : begin // SH
-					mem_array[eff_addr[16:0]] <= data_i[7:0];
-					mem_array[eff_addr[16:0]+1] <= data_i[15:8];
+				2'b01 : begin
+					case(byte_sel)
+						2'b00 : mem_array[eff_addr[15:2]][15:0] <= data_i[15:0];
+						2'b01 : mem_array[eff_addr[15:2]][31:16] <= data_i[15:0];
+					endcase
 				end
-				3'b010 : begin // SW
-					mem_array[eff_addr[16:0]] <= data_i[7:0];
-					mem_array[eff_addr[16:0]+1] <= data_i[15:8];
-					mem_array[eff_addr[16:0]+2] <= data_i[23:16];
-					mem_array[eff_addr[16:0]+3] <= data_i[31:24];
+				2'b10 : begin
+					mem_array[eff_addr[15:2]] <= data_i;
 				end
-				default : ; // do nothing
+				default : mem_array[eff_addr[15:2]] <= data_i;
 			endcase
 		end
+			
 	end
+	
 endmodule
 	
+	
+/*
+	- [15:2] because we are assuming word aligned address inputs
+	- Assuming the lowest two bits refer to the byte address
+*/
