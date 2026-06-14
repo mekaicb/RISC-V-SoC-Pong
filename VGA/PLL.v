@@ -90,13 +90,13 @@ module PLL (
 				.vcounderrange ());
 	defparam
 		altpll_component.bandwidth_type = "AUTO",
-		altpll_component.clk0_divide_by = 4000,
+		altpll_component.clk0_divide_by = 2000,
 		altpll_component.clk0_duty_cycle = 50,
 		altpll_component.clk0_multiply_by = 1007,
 		altpll_component.clk0_phase_shift = "0",
 		altpll_component.compensate_clock = "CLK0",
-		altpll_component.inclk0_input_frequency = 10000,
-		altpll_component.intended_device_family = "Cyclone IV E",
+		altpll_component.inclk0_input_frequency = 20000,
+		altpll_component.intended_device_family = "MAX 10",
 		altpll_component.lpm_hint = "CBX_MODULE_PREFIX=PLL",
 		altpll_component.lpm_type = "altpll",
 		altpll_component.operation_mode = "NORMAL",
@@ -176,13 +176,13 @@ endmodule
 // Retrieval info: PRIVATE: GLOCKED_MODE_CHECK STRING "0"
 // Retrieval info: PRIVATE: GLOCK_COUNTER_EDIT NUMERIC "1048575"
 // Retrieval info: PRIVATE: HAS_MANUAL_SWITCHOVER STRING "1"
-// Retrieval info: PRIVATE: INCLK0_FREQ_EDIT STRING "100.000"
+// Retrieval info: PRIVATE: INCLK0_FREQ_EDIT STRING "50.000"
 // Retrieval info: PRIVATE: INCLK0_FREQ_UNIT_COMBO STRING "MHz"
 // Retrieval info: PRIVATE: INCLK1_FREQ_EDIT STRING "100.000"
 // Retrieval info: PRIVATE: INCLK1_FREQ_EDIT_CHANGED STRING "1"
 // Retrieval info: PRIVATE: INCLK1_FREQ_UNIT_CHANGED STRING "1"
 // Retrieval info: PRIVATE: INCLK1_FREQ_UNIT_COMBO STRING "MHz"
-// Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
+// Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "MAX 10"
 // Retrieval info: PRIVATE: INT_FEEDBACK__MODE_RADIO STRING "1"
 // Retrieval info: PRIVATE: LOCKED_OUTPUT_CHECK STRING "0"
 // Retrieval info: PRIVATE: LONG_SCAN_RADIO STRING "1"
@@ -223,6 +223,10 @@ endmodule
 // Retrieval info: PRIVATE: SPREAD_USE STRING "0"
 // Retrieval info: PRIVATE: SRC_SYNCH_COMP_RADIO STRING "0"
 // Retrieval info: PRIVATE: STICKY_CLK0 STRING "1"
+// Retrieval info: PRIVATE: STICKY_CLK1 STRING "0"
+// Retrieval info: PRIVATE: STICKY_CLK2 STRING "0"
+// Retrieval info: PRIVATE: STICKY_CLK3 STRING "0"
+// Retrieval info: PRIVATE: STICKY_CLK4 STRING "0"
 // Retrieval info: PRIVATE: SWITCHOVER_COUNT_EDIT NUMERIC "1"
 // Retrieval info: PRIVATE: SWITCHOVER_FEATURE_ENABLED STRING "1"
 // Retrieval info: PRIVATE: SYNTH_WRAPPER_GEN_POSTFIX STRING "0"
@@ -232,13 +236,13 @@ endmodule
 // Retrieval info: PRIVATE: ZERO_DELAY_RADIO STRING "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: BANDWIDTH_TYPE STRING "AUTO"
-// Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "4000"
+// Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "2000"
 // Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "1007"
 // Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
 // Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK0"
-// Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "10000"
-// Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
+// Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "20000"
+// Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "MAX 10"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altpll"
 // Retrieval info: CONSTANT: OPERATION_MODE STRING "NORMAL"
 // Retrieval info: CONSTANT: PLL_TYPE STRING "AUTO"
