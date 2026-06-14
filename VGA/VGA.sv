@@ -1,12 +1,12 @@
 module VGA(
-	input logic clock, rst_n, we, // 100MHz clock from FPGA
+	input logic clock, rst_n, we,
 	input logic [31:0] data_i,
-	input logic [13:0] addr_i,
+	input logic [17:0] addr_i,
 	output logic [2:0] rgb,
 	output logic hsync, vsync
 	);
 	
-	logic [14:0] addr_r;
+	logic [17:0] addr_r;
 	logic [9:0] x, y;
 	logic [3:0] pixel_sel;
 	logic [31:0] data_o;
