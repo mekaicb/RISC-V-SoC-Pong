@@ -9,14 +9,18 @@ module RAM(
 	logic [2:0] byte_en, byte_en_r; // Selects which byte of the word to load from memory, or store to memory
 	logic [1:0] byte_sel, byte_sel_r;
 	logic [31:0] data_temp;
+	logic [31:0] addr_temp;
+	logic [14:0] eff_addr;
 	
-	logic [31:0] eff_addr;
+	// 0x1400 to 0x4FFF -> 15 Address bits req
 	(* ramstyle = "M9K" *) logic [31:0] mem_array[0:3839]; // Word addressible 15kB RAM. (15kB = 3840 words = 15360 bytes)
 	
-	localparam offset = 32'h0000A000; // Start at 5kB
+	localparam offset = 32'h1400;
 	
-	assign eff_addr = (addr_in - offset);
-	assign byte_sel = eff_addr[1:0]; // Assign byte enable to the lower two bits of the address input
+	always_comb begin
+		byte_sel = eff_addr[1:0]; // Assign byte enable to the lower two bits of the address input
+		eff_addr = (addr_in - offset) >> 2; // Exclude first two bits since mem_array is word addressible only
+	end
 	
 	always_comb begin
 		case(funct3)
@@ -29,32 +33,32 @@ module RAM(
 		endcase
 	end
 	
-		always_ff @(posedge clk) begin // Synchronous read
+	always_ff @(posedge clk) begin // Synchronous read
 		if(memread) begin 
-			data_temp <= mem_array[eff_addr[14:2]]; // Simple read 
+			data_temp <= mem_array[eff_addr]; // Read full 32 bit word
 			byte_sel_r <= byte_sel; // prevent being overwritten on the next cycle
 			byte_en_r <= byte_en;
  		end
 		if(memwrite) begin // Write can be complicated
 			case(byte_en)
 				3'b000 : begin
-					case(byte_sel)
-						2'b00 : mem_array[eff_addr[14:2]][7:0] <= data_i[7:0];
-						2'b01 : mem_array[eff_addr[14:2]][15:8] <= data_i[7:0];
-						2'b10 : mem_array[eff_addr[14:2]][23:16] <= data_i[7:0];
-						2'b11 : mem_array[eff_addr[14:2]][31:24] <= data_i[7:0];
+					case(byte_sel) // Which byte in the word to write to?
+						2'b00 : mem_array[eff_addr][7:0] <= data_i[7:0];
+						2'b01 : mem_array[eff_addr][15:8] <= data_i[7:0];
+						2'b10 : mem_array[eff_addr][23:16] <= data_i[7:0];
+						2'b11 : mem_array[eff_addr][31:24] <= data_i[7:0];
 					endcase
 				end
 				3'b001 : begin
 					case(byte_sel)
-						2'b00 : mem_array[eff_addr[14:2]][15:0] <= data_i[15:0];
-						2'b10 : mem_array[eff_addr[14:2]][31:16] <= data_i[15:0];
+						2'b00 : mem_array[eff_addr][15:0] <= data_i[15:0];
+						2'b10 : mem_array[eff_addr][31:16] <= data_i[15:0];
 					endcase
 				end
 				3'b010 : begin
-					mem_array[eff_addr[14:2]] <= data_i;
+					mem_array[eff_addr] <= data_i;
 				end
-				default : mem_array[eff_addr[14:2]] <= data_i;
+				default : mem_array[eff_addr] <= data_i;
 			endcase
 		end	
 	end
