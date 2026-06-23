@@ -1,6 +1,6 @@
 module program_counter(
 	input logic [31:0] addr_in,
-	input logic clk, rst_n, pcwrite, ebreak,
+	input logic clk, rst_n, pcwrite, ebreak, pcsrc,
 	output logic [31:0] addr_out
 	);
 	
@@ -11,11 +11,11 @@ module program_counter(
 		else if(ebreak) begin
 			addr_out <= addr_out;
 		end
-		else if(!pcwrite) begin
-			addr_out <= addr_in;
+		else if(!pcwrite || pcsrc) begin // if pcwrite = 0 or pcsrc, continue as normal, else stall
+			addr_out <= addr_in; 
 		end
 		
-		// else hold prev value
+		// else if pcwrite, hold prev value (addr_out <= addr_in)
 		
 	end
 	
