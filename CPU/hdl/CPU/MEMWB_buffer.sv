@@ -3,6 +3,7 @@ module MEMWB_buffer(
 	input logic [31:0] memdata_i,
 	input logic [31:0] ALU_result_i,
 	input logic [4:0] rd_addr_i,
+	input logic MEMWB_hazard_flush,
 	output logic regwrite_o, memtoreg_o,
 	output logic [31:0] memdata_o,
 	output logic [31:0] ALU_result_o,
@@ -10,7 +11,7 @@ module MEMWB_buffer(
 	);
 	
 	always_ff @(posedge clk) begin
-		if(!rst_n) begin	
+		if(!rst_n || MEMWB_hazard_flush) begin	
 			regwrite_o <= 1'b0;
 			memtoreg_o <= 1'b0;
 			memdata_o <= 32'b0;
