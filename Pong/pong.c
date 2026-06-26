@@ -2,6 +2,9 @@
 
 #define WPR 40   // 640px / 16px-per-word -> 40 Words/Row
 
+#define p1 ((volatile uint32_t *)0x12ECC) // player 1 starting position
+#define BALL_CENTER ((volatile uint32_t *)0xE64C)
+
 #define topLeft ((volatile uint32_t *)0x9B28)
 #define topRight ((volatile uint32_t *)0x9B78)
 #define bottomLeft ((volatile uint32_t *)0x13128)
@@ -21,24 +24,31 @@
 #define MAX_RIGHT ((volatile uint32_t *)0x12EF0) // Center position + 4(9) -> 9 words right of paddle center (9 since game area is 20 words, half from center is 10 words)
 #define MAX_LEFT ((volatile uint32_t *)0x12EA8)
 
+#define BALL_CENTER ((volatile uint32_t *)0xE64C) // 19 (words to center) + WPR(240) + 0x5000 (offset) = 0xE64C in mem
+#define BALL_SPEED 2
+
 
 void draw_borders(void);
 void draw_players(volatile uint32_t **p1_pos, volatile uint32_t *p1left, volatile uint32_t *p1right, volatile uint32_t *p2left, volatile uint32_t *p2right);
 void fill_colour(volatile uint32_t color, volatile uint32_t **p1_pos); 
 void delay(void);
+void draw_ball(volatile uint32_t **ball_pos, volatile uint32_t **p1_pos, int *vx, int *vy);
 
 void main(void){
 
-    volatile uint32_t *p1 = (volatile uint32_t *)0x12ECC; // Bottom center
     volatile uint32_t *p1_pos = p1; // initilize position to center
+    volatile uint32_t *ball_pos = BALL_CENTER;
+    int vx = BALL_SPEED;
+    int vy = BALL_SPEED + 4;
 
     draw_borders();
+
     while(1){
 	delay();
+	draw_ball(&ball_pos, &p1_pos, &vx, &vy); // pass vx, vy by reference to allow function to modify
         draw_players(&p1_pos, p1_left, p1_right, p2_left, p2_right);
     }
 
-    while(1);
 }
 
 void draw_borders(void){
@@ -57,7 +67,6 @@ void draw_borders(void){
 }
 
 void draw_players(volatile uint32_t **p1_pos, volatile uint32_t *p1left, volatile uint32_t *p1right, volatile uint32_t *p2left, volatile uint32_t *p2right){
-
     if(!(*p1left) && !(*p1right)){ // If no user input, maintain current position
         fill_colour(BLUE, p1_pos);
     }
@@ -70,8 +79,8 @@ void draw_players(volatile uint32_t **p1_pos, volatile uint32_t *p1left, volatil
     }
     else if(*p1left){
         if(*p1_pos != MAX_LEFT){
-            fill_colour(BLACK, p1_pos); // Clear the old player position
-            *p1_pos -= 1; // Advance one word
+            fill_colour(BLACK, p1_pos);
+            *p1_pos -= 1;
         }
         fill_colour(BLUE, p1_pos); // Draw the new player position
     }
@@ -89,6 +98,36 @@ void fill_colour(volatile uint32_t colour, volatile uint32_t **p1_pos){ // since
         }
     }
 }
+
+void draw_ball(volatile uint32_t **ball_pos, volatile uint32_t **p1_pos, int *vx, int *vy){
+    for(int i = 0; i < 8; i++){ // 8 rows (8x8 ball)
+        (*ball_pos)[(i*WPR)] = BLACK;
+    }
+
+    // Compute new velocities
+    if( ((*ball_pos - topLeft) % WPR == 1) || ((*ball_pos - topRight) % WPR == 39) ){ // Note that % 40 refers to _umodsi13 for repeat>
+        *vx = -(*vx); // If ball hits left or right edge, reverse vx, keep vy
+    }
+    if((*ball_pos - topLeft) / WPR <= 8){
+        *vy = -(*vy); // If ball hits top edge, reverse vy, keep vx
+    }
+
+    // NOTE: May have to increase/decrease 225 if vy speed increases/decreases respectively
+    if((*ball_pos - topLeft) / WPR >= 225){ // >= accounts for if speed is increased and ball may jump over 230 exact 
+        //(*ball_pos) = BALL_CENTER;
+        *vy = -(*vy);
+    }
+
+    *ball_pos = *ball_pos + (*vy)*WPR + (*vx);   // Set new ball position
+    for(int i = 0; i < 8; i++)
+        (*ball_pos)[i*WPR] = (GREEN & 0x0000FFFF); // Redraw ball
+
+
+    //else if((*ball_pos == (*p1_pos - 8*(WPR)))){ needs fixing
+    //    *vy = -(*vy);
+    // }
+}
+
 
 
 /*
