@@ -1,3 +1,5 @@
+// AI generated linker script to focus on learning HDL
+
 ENTRY(_start)
 
 MEMORY {
@@ -7,8 +9,8 @@ MEMORY {
 
 SECTIONS {
     .text : {
-        KEEP(*(.text.init))   /* _start lands at 0x0 */
-        *(.text*)
+        KEEP(*(.text.init)) 
+        *(.text*) 
     } > ROM
 
     .rodata : { *(.rodata*) } > ROM
