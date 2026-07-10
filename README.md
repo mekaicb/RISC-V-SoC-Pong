@@ -47,7 +47,7 @@ The VGA connector wiring diagram is shown below.
 
 ![VGA Diagram](docs/VGA_datapath.png)
 
-## How the repo is organized
+## Repo Organization
 
 ```
 CPU/hdl/CPU/       The processor RTL (ALU, register file, control unit,
@@ -60,7 +60,7 @@ Pong/              The game: C source, compile script, and hex output
 docs/              Design report and demo gif
 ```
 
-## Memory map
+## Memory Map
 
 | Region | Address range | Size |
 |---|---|---|
@@ -84,10 +84,14 @@ To run it on hardware, open the Quartus project in CPU/synthesis, compile it, an
 
 To simulate it, run the testbenches in CPU/test using ModelSim.
 
-## Things I want to add next
+## Next Steps
 
-I'd like to add interrupts, CSR support (which would also let me measure CPI properly), branch prediction, a cache, and eventually the M extension for hardware multiply and divide.
-
+- CSR Support
+- Interrupts
+- Branch Prediction
+- M-extension
+- Run DOOM
+  
 ## References
 
 The pipeline is based on the Patterson and Hennessy design, extended to cover all the RV32I non-system instructions. The full design report and detailed datapath diagram are in the docs folder.
